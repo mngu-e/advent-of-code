@@ -3,79 +3,115 @@ import time
 
 
 class Day04Solution(Solution):
-    def __init__(self):
-        data = read_data("04")
-        lines = data.split("\n")
-        self.data = list(filter(None, lines))
+    directions = [
+        (-1, -1),
+        (-1, 0),
+        (-1, 1),
+        (0, -1),
+        (0, 1),
+        (1, -1),
+        (1, 0),
+        (1, 1),
+    ]
 
-    def get_cell(self, row, col):
-        if 0 <= row < len(self.data) and 0 <= col < len(self.data[row]):
-            return self.data[row][col]
+    def __init__(self):
+        self.data = read_data("04")
+
+    def get_cell(self, grid, row, col):
+        if 0 <= row < len(grid) and 0 <= col < len(grid[row]):
+            return grid[row][col]
         return 0
 
     def part1(self):
         acc = 0
-        directions = [
-            (-1, -1),
-            (-1, 0),
-            (-1, 1),
-            (0, -1),
-            (0, 1),
-            (1, -1),
-            (1, 0),
-            (1, 1),
-        ]
-
-        for row in range(len(self.data)):
-            for col in range(len(self.data[row])):
+        lines = self.data.split("\n")
+        grid = list(filter(None, lines))
+        for row in range(len(grid)):
+            for col in range(len(grid[row])):
                 adjacent_count = 0
-                if self.data[row][col] == "@":
-                    for dr, dc in directions:
-                        if self.get_cell(row + dr, col + dc) == "@":
+                if grid[row][col] == "@":
+                    for dr, dc in self.directions:
+                        if self.get_cell(grid, row + dr, col + dc) == "@":
                             adjacent_count += 1
                     if adjacent_count < 4:
                         acc += 1
         print("part 1: ", acc)
 
-    def remove_cell(self, grid):
-        acc = 0
-        directions = [
-            (-1, -1),
-            (-1, 0),
-            (-1, 1),
-            (0, -1),
-            (0, 1),
-            (1, -1),
-            (1, 0),
-            (1, 1),
-        ]
+    def part2(self):
+        self.part2dfs()
+        self.part2brute()
 
+    def part2brute(self):
+        lines = self.data.split("\n")
+        grid = [list(line) for line in filter(None, lines)]
+        start_time = time.time()
+        acc = 0
+        while True:
+            curr_acc = 0
+            for row in range(len(grid)):
+                for col in range(len(grid[row])):
+                    adjacent_count = 0
+                    if grid[row][col] == "@":
+                        for dr, dc in self.directions:
+                            if self.get_cell(grid, row + dr, col + dc) == "@":
+                                adjacent_count += 1
+                        if adjacent_count < 4:
+                            grid[row][col] = "."
+                            curr_acc += 1
+            if curr_acc == 0:
+                break
+            acc += curr_acc
+
+        print("--- %s seconds ---" % (time.time() - start_time))
+        print("part 2 brute: ", acc)
+
+    def part2dfs(self):
+        from collections import deque
+
+        lines = self.data.split("\n")
+        grid = [list(line) for line in filter(None, lines)]
+        start_time = time.time()
+
+        queue = deque()
+        queued = set()
         for row in range(len(grid)):
             for col in range(len(grid[row])):
                 adjacent_count = 0
                 if grid[row][col] == "@":
-                    for dr, dc in directions:
-                        if 0 <= row + dr < len(grid) and 0 <= col + dc < len(grid[row]):
-                            if grid[row + dr][col + dc] == "@":
-                                adjacent_count += 1
+                    for dr, dc in self.directions:
+                        if self.get_cell(grid, row + dr, col + dc) == "@":
+                            adjacent_count += 1
                     if adjacent_count < 4:
-                        str_as_list = list(grid[row])
-                        str_as_list[col] = "."
-                        grid[row] = "".join(str_as_list)
-                        acc += 1
-        return acc
-
-    def part2(self):
-        start_time = time.time()
+                        queue.append((row, col))
+                        queued.add((row, col))
         acc = 0
-        grid = self.data.copy()
-        while True:
-            accX = self.remove_cell(grid)
-            acc += accX
-            if accX == 0:
-                break
+        while queue:
+            row, col = queue.popleft()
+            queued.remove((row, col))
+
+            if grid[row][col] != "@":
+                continue
+
+            grid[row][col] = "."
+            acc += 1
+
+            for dr, dc in self.directions:
+                nr, nc = row + dr, col + dc
+                if (
+                    0 <= nr < len(grid)
+                    and 0 <= nc < len(grid[nr])
+                    and grid[nr][nc] == "@"
+                    and (nr, nc) not in queued
+                ):
+                    adjacent_count = 0
+                    for ndr, ndc in self.directions:
+                        if self.get_cell(grid, nr + ndr, nc + ndc) == "@":
+                            adjacent_count += 1
+                    if adjacent_count < 4:
+                        queue.append((nr, nc))
+                        queued.add((nr, nc))
         print("--- %s seconds ---" % (time.time() - start_time))
-        print("part 2: ", acc)
+        print("part 2 dfs: ", acc)
 
 
 solution = Day04Solution()
