@@ -1,7 +1,11 @@
-from utils import Solution
+from utils import Solution, read_data
 
 
 class Day06Solution(Solution):
+    def __init__(self):
+        data = read_data("06")
+        self.data = data
+
     def part1(self):
         pass
 
@@ -9,4 +13,4 @@ class Day06Solution(Solution):
         pass
 
 
-solution = Day06Solution("06")
+solution = Day06Solution()
